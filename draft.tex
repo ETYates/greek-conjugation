@@ -1,0 +1,728 @@
+\documentclass[12pt]{article}
+\usepackage{polyglossia}
+\setdefaultlanguage{english}
+\usepackage{acl}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{fontspec}
+\usepackage[T2A]{fontenc}
+% \setmainfont[Ligatures=TeX]{Times New Roman}
+\setmainfont[Ligatures=TeX]{Linux Libertine O}
+\usepackage{microtype}
+\usepackage{latexsym}
+
+\title{A Formal Analysis of Classical Greek Conjugation}
+\author{Ethan Yates\\
+        Brandeis University\\
+        Waltham, MA\\
+        ethanyates@brandeis.edu}
+\date{2022}
+
+\begin{document}
+\newcommand{\koronis}[1]{#1\symbol{"0313}}
+\newcommand{\dasia}[1]{#1\symbol{"0314}}
+\newcommand{\macronbelow}[1]{#1\symbol{"0331}}
+\newcommand{\cedilla}[1]{#1\symbol{"0326}}
+% \newcommand{\rpsi}{p\textsubscript{s}}
+\maketitle
+
+\begin{abstract}
+    This article is an attempt to formalize the Greek conjugational system with
+    mathematical notation as a means of working towards a computational
+    implementation of the synthesis of verb forms. It is hoped that such a tool
+    will be of use to students who are learning the nuances of the complex
+    verbal system in classical Greek. With this attempt at formalization, it is
+    hoped that it will provide the core basis for the development of a
+    morphologically intelligent information retrieval system for classical
+    Greek utiziling modern analyses and tools.
+\end{abstract}
+
+\section{Introduction}
+
+Classical Greek has been studied extensively for thousands of years. Reading
+knowledge of classical Greek (henceforth referred to just as \textit{Greek}) is
+a sought-after skill in the humanities, especially in the fields of classical
+studies, theology, philosophy, and linguistics. As a result of its long
+history, the grammar of classical Greek has been very thoroughly studied.
+However, the main practitioners of classical Greek work outside of the field of
+linguistics (classical studies, theology, and philosophy) meaning the amount the
+most modern methods in linguistics have yet to be used to analyze the language to
+the same degree as modern languages.
+
+One of the most important resources for studying Greek is the
+\textit{Perseus Digital Library}, a platform that hosts ancient texts (in both
+Latin and Greek) in a reading environment. The platform allows users to click
+on individual words in order to show their lemma and morphological analysis. 
+
+Morphologically intelligent information retrieval (expecially verbs) is of
+utmost importance to students of classical Greek (hereafter referred to just as
+\textit{Greek}). Verb conjugations are notoriously difficult for students in
+their first year of study, due to the relatively high complexity of the
+conjugational system in comparison to modern languages more widely spoken
+Europe and North America with simpler verbal paradigms. The conjugational
+system utilizes thematic vowels, concatenation of personal endings,
+reduplication, and derivational prefixes, resulting in around 2 million
+potential forms for each verb \citep{crane91}. Most textbooks and reference
+grammars have examples of
+
+There is in fact already a program that does this--\textit{Morpheus} is a
+program created by Perseus Digital Library to take Greek words as input and
+output their morphological analysis. Morpheus was used to create the treebanks
+of Greek texts hosted by Perseus. These treebanks (organized by individual
+text) contain texts organized by sentence, with each word tagged for its
+morphology and dependency syntax. While they have quite extensive coverage of
+the most famous Greek texts, not every text has been analyzed. Classical Greek,
+having a written history spanning thousands of years, has many texts which have
+not been digitzed from old printed editions, and even many texts that have
+never been edited into print from the original manuscripts. 
+
+Morpheus was written in the C programming language decades ago, using a very
+rigorous set of rules written by classical scholars. A new program written in a
+language more suitable for data manipulation (such as Python) is desireable.
+The amount of annotated data in the treebanks is enough to work towards
+building a model using statistical methods.  However, given the relatively
+large amount of features for each verb form, it is necessary to first formulate
+a computational analysis of Greek conjugation to allow for the generation of
+verb forms, given a lemma and a set of features as input. Once it is possible
+to generate verb forms, it is an important step towards building a system that
+works in the \textit{opposite} direction, to parse the morphological features
+and the lemma from a given verb form. This paper will focus on building a
+formal analysis of Greek conjugation (inspired by previous work on other
+languages) as a first step toward building a program that will synthesize
+verb forms and provide a basis for a larger system. In addition, it will be
+demonstrated how such synthesis of verb forms can be used to build corpora 
+for statistical analysis.
+
+\section{Prior work on Conjugation}
+
+\subsection{Linguistic treatments of conjugation}
+
+Greek grammar has a very long tradition stretching back to antiquity. The
+\textit{modern} study of Greek grammar dates back c. ~200 years. In this
+computation analysis, it is desireable to use the most thorough analysis of the
+conjugational system as possible, while drawing potential insights from older
+sources. In the English language, the pioneering reference grammar is \textit{A
+Greek Grammar for Colleges} \citep{smyth1920} which describes the entire
+language in detail.  Almost a century later, Cambridge University published
+\textit{The Cambridge Grammar of Classical Greek} \citep{boas2019}, which
+represents the most "up to date" reference Grammar published in English.  The
+system presented in this paper is based on the sections on verb inflection in
+both reference grammars. 
+
+Both reference grammars provide a mostly \textit{synchronic} analysis (dipping
+into diachronic analysis in some areas to give context). Given that historical
+linguistics often provides explanation for so-called "irregular" forms (in
+traditional classroom pedagogy), it was necessary to consult \textit{The
+Origins of the Greek Verb} \citep{willi2018}, which provides the most thorough
+analysis of Greek conjugation in the context of Indo-European historical
+linguistics.
+
+In 1948, Roman Jakobson published a famous alaysis of Russian conjugation in
+which he breaks the verbal system down into a system of rules (in prose form)
+\citep{jakobson48}. This approach was well recieved and emulated by other
+authors in analyses of Polish \citep{schenker1954}, Czech
+\citep{rubenstein1951}, and Old Church Slavonic/Old Russian \cite{halle1951}.
+
+\subsection{Computational treatments of conjugation}
+
+Multiple scholars were inspired by Jakobson's rule-based approach. A
+computational implementation of \citet{jakobson48} was written in the ALGOL60
+programming language \citep{kortlant1971}. Mathematician Joachim Lambek,
+noticing how a rule-based system lends itself to a mathematical analysis, wrote
+a computational analysis of French conjugation \citep{lambek75}. The main 
+development by Lambek was the formalization of a rule-based system like in
+\citet{jakobson48}, into rewrite rules, lending themselves to sting manipulation.
+
+As mentioned before, \textit{Morpheus} was developed for morphologically
+intelligent information retrieval utilizing an extensive rule--based system
+curated by experts \citep{crane91}. This program both parses and generates
+forms of words, and has been used to generate large annotated corpora. These
+rules are extremely numerous, and designed for multiple dialects.  The program
+is quite old (written in \textit{C}) and does not utilize statistical methods.
+Working towards a new program for morphologically intelligent information
+retrieval is the main motivation for this paper.
+
+\section{Scope of analysis}
+
+The full paradigm of a Greek verb contains up to 1000 distinct forms, and when
+including derivational prefixes, can number in the millions \citep{crane91}.
+Therefore, it is necessary to lessen the scope of the analyses of verbs. In
+this article, only the \textit{indicative} voice of the \textit{regular} verb
+(terms to be explained later) will be analyzed in order to create the
+beginnings of a system that can be expanded to cover all types of Greek verbs.
+This paper will first give as concise a \textit{linguistic} description of
+conjugation as is possible, followed by a \textit{mathematical} analysis of the
+conjugational system. The end of the article will contain some proposals as to
+how the data from this program could be utilized.
+
+\section{Linguistic overview of Greek conjugation}
+
+\subsection{Features of Verbs}
+
+When it comes to morphologically intelligent information retrieval, it is
+necessary to define what information is being retrieved (or in the opposite
+case of the synthesis of verb forms, what information is given to the function
+as input). There are \textbf{five} features to be extracted. Verbs are marked
+for \textit{person}, \textit{number}, \textit{tense}, \textit{voice}, and
+\textit{mood}. Each potential option for these features is given below.
+
+\begin{itemize}
+    \item \textbf{Person}: \textit{first, second, third}
+    \item \textbf{Number}: \textit{singular, dual, plural}
+    \item \textbf{Tense}: \textit{present, imperfect, future, aorist, perfect, pluperfect.}
+    \item \textbf{Voice}: \textit{active, middle, passive}
+    \item \textbf{Mood}: \textit{indicative, subjunctive, optative}
+\end{itemize}
+
+Not all tense-mood combinations exist--Table \ref{tab:tense-mood} shows which
+combinations have conjugations. Traditional pedagogy designates a
+\textit{sequence of tenses}, dividing tenses into \textit{primary} and
+\textit{secondary} tenses (in modern linguistic literature called
+\textit{non-past} and \textit{past}, such as in \citet{willi2018}). This
+classification determines which prefixes and personal endings are used when
+selecting morphemes. These ``tenses" are in fact \textbf{tense-aspect}
+combinations, and a tense-aspect combination will be referred to as a
+\textbf{tense-system}.
+
+\begin{table*}
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+        & \textbf{Indicative} & \textbf{Subjunctive} & \textbf{Optative} & \textbf{Imperative} & \textbf{Sequence}\\    
+    \hline
+    \textbf{Present}    & + & + & + & + & \textbf{primary}\\ 
+    \hline
+    \textbf{Imperfect}  & + & - & - & - & \textbf{secondary}\\ 
+    \hline
+    \textbf{Future}     & + & - & + & - & \textbf{primary}\\ 
+    \hline
+    \textbf{Aorist}     & + & + & + & + & \textbf{secondary}\\ 
+    \hline
+    \textbf{Perfect}    & + & + & + & + & \textbf{primary}\\ 
+    \hline
+    \textbf{Pluperfect} & + & - & - & - & \textbf{secondary}\\ 
+    \hline
+\end{tabular}
+\caption{Tense-Mood Paragigms}
+\label{tab:tense-mood}
+\end{table*}
+
+At this stage, only paradigms in the active voice and indicative mood will be considered,
+for the sake of keeping the scope reasonable and for the fact that \textit{all}
+tense systems are represented within the paradigms of the indicative mood.
+
+\subsection{Tense and Aspect}
+
+While Greek is usually described as having six ``tenses", these ``tenses" 
+are more accurately described as morphological systems designated to a 
+tense-aspect pair. Tenses are divided into two ``sequences" (tenses). There
+are also three apects--\textit{perfective, imperfective}, and
+\textit{stative} \citep{willi2018}.
+The six systems (referred to as ``tenses") are yielded by the combination of 
+two sequences (\textit{non-past} and \textit{past}) with three aspects. The 
+tense aspectual pairs are shown in Table \ref{tab:tense-aspect}.
+
+\begin{table*}
+\centering
+\begin{tabular}{|c|c|c|c|}
+    \hline
+    & \textbf{Perfective} & \textbf{Imperfective} & \textbf{Stative}\\
+    \hline
+    \textbf{non-past} & Future & Present & Perfect\\
+    \hline
+    \textbf{past} & Aorist & Imperfect & Pluperfect\\
+    \hline
+\end{tabular}
+\caption{Table of the tense-aspect system}
+\label{tab:tense-aspect}
+\end{table*}
+
+This table will be relevant during formalization, because it represents the
+mapping of tense-systems to tense-aspect pairs. As will be seen in the
+analysis of an example paradigm, some morphemes are conditioned on the tense
+(non-past or past) or the aspect, as opposed to the tense system itself (present,
+future, perfect, etc.). Again, what are referred to as ``tenses'' in the Greek
+grammatical tradition, are actual tense-apsect pairs, and thus it is preferable
+for the formalization to utilize the traditional terminology in the input, map
+the ``tense'' to a tense-aspect pair, and then use those features for the
+selection of morphemes.
+
+\subsection{Romanization}
+
+This paper will require a consistent system of Romanization to be accessible
+to those without knowledge of the Greek writing system. The table of romanization
+is given in Tabel \ref{tab:romanization}.
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|}
+    \hline
+    \textsc{Greek} & \textsc{Latin}\\\hline
+    α & a\\\hline
+    β & b\\\hline
+    γ & g\\\hline
+    δ & d\\\hline
+    ε & e\\\hline
+    ζ & z\\\hline
+    η & ē\\\hline
+    θ & \macronbelow{t}\\\hline
+    ι & i\\\hline
+    κ & k\\\hline
+    λ & l\\\hline
+    μ & m\\\hline
+    ν & n\\\hline
+    ξ & x\\\hline
+    ο & o\\\hline
+    π & p\\\hline
+    ρ & r\\\hline
+    σ & s\\\hline
+    τ & t\\\hline
+    υ & u\\\hline
+    φ & \={p}\\\hline
+    χ & \macronbelow{k}\\\hline
+    ψ & \c{p}\\\hline
+    ω & \={o}\\\hline
+\end{tabular}
+\caption{Romanization scheme}
+\label{tab:romanization}
+\end{table}
+
+This particular system of Romanization was adapted from that used by Wiktionary
+in all of their entries for
+Greek.
+\footnote{\url{https://en.wiktionary.org/wiki/Wiktionary:Ancient_Greek_transliteration}}
+Wiktionary describes their system as \textit{scientific transliteration}--it
+is desireable because it is designed for automatic computation, but is also
+readable for scholars when examining Greek entries.
+
+Their system uses several digraphs (\textit{ph, th, kh, ps, ks, rh}) to
+represent what were originally single graphemes. This is not a problem when
+used as a one-way transliteration system for scholarly reference. But for
+computation, it is a lot less confusing if there is a one-to-one correspondence
+between each Greek letter and its romanization. For this project, several
+modifications have been made to Wiktionary's system in order to remove all
+digraphs: \textbf{ph, th, kh, ks, rh} are changed to \textbf{\={p},
+\macronbelow{t}, \macronbelow{k}, x, r}.  These representations are
+inspired from the scholarly transliteration of Arabic from Hans Wehr's Arabic
+Dictionary \citep{wehr61}. This system was chosen in order to keep the three
+way distinction between voiced, aspirated, and unaspirated stops.
+
+One final digraph not mentioned is the Greek letter Psi \textbf{ψ}, usually
+romanized as \textbf{ps}. In order to mark that it is one grapheme instead
+of two, it is written as \c{p} (\textit{p} with a cedilla diacritic
+beow the letter, representing a little \textit{s}).
+
+In terms of vowels there are the typical five vowels--\textit{a, e, i, o, u}
+along with their accompanying long counterparts
+(\textit{\={a},\={e},\={i},\={o},\={u}}).
+
+This scheme of romanization is provisional, and only used for the purposes of
+this paper. The use of diacritics is meant to reduce the amount of graphemes,
+so that each grapheme in Greek is represented by exactly one grapheme
+in romanization.
+
+Greek has a complex system of accentuation. In the scope of this paper, this
+will not be addressed--this is fine for our purposes, and has been an approach
+taken in prior projects of a similar nature \citep{crane91}. However, it will
+be a necessary step to address it in future work. For the sake of completeness,
+accents are still included in romanization.
+
+\subsection{Description of graphemes}
+
+Graphemes will briefly be presented based on the properties of their respective
+phonemes. There are 9 \textit{stops} (also called \textit{plosives}), two
+nasals, a liquid, and a silibant. The 9 stops show a three-way distinction based 
+on voicing and aspiration. The distribution of consonants is shown in Table
+\ref{tab:stops}.
+
+\begin{table*}
+\centering
+\begin{tabular}{|c|c c c c c c c|}
+    \hline
+                    & \textbf{unaspirated} & \textbf{aspirated} & \textbf{voiced} & \textbf{nasalized} & \textbf{liquid} & \textbf{trill} & \textbf{silibant}\\\hline
+    \textbf{labial} & p                    & \={p}              & b               & m                  &                 &                & \\
+    \textbf{dental} & t                    & \macronbelow{t}    & d               & n                  & l               & r              & s\\
+    \textbf{velar}  & k                    & \macronbelow{k}    & g               &                    &                 &                & \\\hline
+\end{tabular}
+\caption{Distribution of cononants (graphemes)}
+\label{tab:stops}
+\end{table*}
+
+\subsection{Morphemes and Lexemes}
+
+The active-indicative conjugation of \textit{l\'{u}\={o}}, the archetypal
+regular verb, is given in table \ref{tab:regular-conjugation}  (the dual number
+has been omitted for brevity).
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l|}
+    \hline
+    \textbf{Primary} & \textbf{Secondary}\\
+    \hline
+    \textsc{Present} & \textsc{Imperfect}\\
+    \hline
+    l\'{u}\={o} & \H{e}luon\\
+    l\'{u}eis   & \H{e}lues\\
+    l\'{u}ei    & \H{e}lue\\
+    l\'{u}omen  & e\symbol{"0313}l\'{u}omen\\
+    l\'{u}ete   & e\symbol{"0313}l\'{u}ete\\
+    l\'{u}ousi  & e\symbol{"0313}l\'{u}ousi\\
+    \hline
+    \textsc{Future} & \textsc{Aorist}\\
+    \hline
+    l\'{u}s\={o} & \H{e}lusa\\
+    l\'{u}seis   & \H{e}lusas\\
+    l\'{u}sei    & \H{e}luse\\
+    l\'{u}somen  & e\symbol{"0313}l\'{u}samen\\
+    l\'{u}sete   & e\symbol{"0313}l\'{u}sate\\
+    l\'{u}sousi  & e\symbol{"0313}l\'{u}san\\
+    \hline
+    \textsc{Perfect} & \textsc{Pluperfect}\\
+    \hline
+    l\'{e}luka      & e\symbol{"0313}lel\'{u}kein\\
+    l\'{e}lukas     & e\symbol{"0313}lel\'{u}keis\\
+    l\'{e}luke      & e\symbol{"0313}lel\'{u}kei\\
+    lel\'{u}kamen   & e\symbol{"0313}lel\'{u}kemen\\
+    lel\'{u}kate    & e\symbol{"0313}lel\'{u}kete\\
+    lel\'{u}kasi    & e\symbol{"0313}lel\'{u}kesan\\
+    \hline
+\end{tabular}
+\caption{Regular verb conjugation}
+\label{tab:regular-conjugation}
+\end{table}
+
+\subsubsection{Overview}
+
+The Greek verb consists of \textit{at most} 5 elements (in reality 6, but here
+we ignore derivational morphology and focus only on inflectional morphology). 
+Notice how in table \ref{tab:regular-conjugation} the presence of the $e$-augment in the \textit{past tenses}, and
+its absence in the \textit{non-past} tenses. In addition, take note of the
+tense-suffixes present for each aspect (-$\emptyset$- in the \emph{perfective},
+-\textit{s}- in the \emph{imperfective}, and -$k$- in the \emph{stative}).
+
+\begin{itemize}
+    \item 2 prefixes
+        \begin{enumerate}
+            \item \textit{e}-augment (also called \textit{epsilon augment})\\
+                present-stem \textit{lu-} > imperfect-stem \textit{e\symbol{"0313}lu-}
+            \item Reduplication\footnote{Reduplicated consonants undergo
+                \textit{deaspiration} if the initial consonant of the verb stem
+                is aspireated. e.g. \textit{\macronbelow{t}\'{u}}- $>^{perf.}$
+                \textit{te\macronbelow{t}uk}-} of the stem initial consonant with
+                epenthetic \textit{e}\\ verb-stem \textit{lu-} > reduplicated
+                \textit{lelu-}
+        \end{enumerate}
+    \item The \textit{verb-stem} as specified in a lexicon. In this case, the
+        archetypal verb \textit{lu}- ("to loosen"/"to unbind")
+    \item 3 suffixes
+        \begin{enumerate}
+            \item A \textit{tense suffix}, determined by the aspect
+                (perfective, imperfective, or stative)\\
+                tense-suffix \textit{-k-} for stative \textit{l\'{e}lu-k-a},
+                tense-suffix \textit{-s-} for 1st singular aorist
+                \textit{\koronis{e}l\'{u}-s-ate}
+            \item A \textit{thematic vowel}, determined by the tense, person, and number.\\
+                Thematic vowel -\textit{o}- in 1 singular imperfect \textit{\koronis{e}lu-o-n}
+            \item A \textit{personal ending}, determined by the tense, person, and nummber.\\
+                Personal ending \textit{-n} in \textit{\koronis{e}luo-n}
+        \end{enumerate}
+\end{itemize}
+
+For each of the four morphemes, we will define a table/matrix defining which
+features condition their usage, and use the defined system to describe an
+example paradigm. It is important to note the distinction between the
+\textit{verb-stem} and the \textit{tense-stem}. The verb-stem is the smallest
+unit with no added features drawn from the lexicon, while the tense-stem consists
+of the verb-stem combined with the prefixes (or lack thereof) and \textit{tense-suffix}
+(or lack thereof) conditioned by the tense-system (tense-aspect pair). There is a minimum
+of three morphemes (verb stem, thematic vowel, and personal ending).
+
+\subsubsection{Prefixes}
+
+The \textit{e}-augment is prefixed to the beginning of the verb stem in the
+past-tense (secondary sequence, or the imperfect, aorist, and pluperfect
+tenses). Reduplication of the initial consonant occurs in the stative aspect
+(perfect and pluperfect tenses). The following table shows their distribution.
+
+\begin{table*}
+\centering
+\begin{tabular}{|l|l|l|l|}
+    \hline
+                        & \textbf{Perfective}   & \textbf{Imperfective} & \textbf{Stative}\\
+    \hline
+    \textbf{non-past}   & $\emptyset$           & $\emptyset$           & reduplication\\
+    \hline
+    \textbf{past}       & \textit{e}-augment    & \textit{e}-augment    & \textit{e}-augment+reduplication\\
+    \hline
+\end{tabular}
+\caption{Distribution of prefixes}
+\label{tab:prefixes}
+\end{table*}
+
+This is where considerable economy is obtained in the conditioning of morphemes
+when tense and aspect are separated from the traditional \textit{tenses}. It is
+clear that each morpheme is conditioned by a single feature (with overlap in
+the past stative). But if there was no distinction between tense and aspect,
+all of the tense-systems would require morphemes assigned to them individually.
+
+\subsubsection{Suffixes}
+
+The Greek verb has at most three suffixes.
+
+\begin{enumerate}
+    \item The \textit{tense-suffix} is a suffix added to the verb-stem conditioned
+        on the aspect. The three tense-suffixes are:
+        \begin{itemize}
+            \item -\textit{s}- for the \textbf{perfective}
+            \item -$\emptyset$- for the \textbf{imperfective}
+            \item -\textit{k}- for the \textbf{stative}
+        \end{itemize}
+    \item The \textit{thematic vowel} is infixed between the tense-stem and the
+        personal ending. There are three variations of the thematic vowel 
+        that are conditioned on the tense-system; \textit{e/o}, \textit{a}, and
+        \textit{e}. The distribution of these theme vowels is conditioned by the
+        tense-system and the person-number, and is shown below in Table \ref{tab:theme}.
+    \item The \textit{personal ending} is conditioned by the person and number, and
+        is the final prefix. There are 5 different sets of endings, but we will only
+        focus on the \textit{thematic} endings, both \textit{primary} and
+        \textit{secondary}. All the endings will be given for the sake of completeness,
+        but we are not addressing the middle-passive system in this paper. These are given
+        in table \ref{tab:personal-endings}
+\end{enumerate}
+
+All of these suffixes can be represented as matrices, the dimensions of which
+correspond to each feature conditioning each respective suffix. This will be
+defined explicitely in the next section.
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+    \hline
+    & \textbf{1s} & \textbf{2s} & \textbf{3s} & \textbf{1p} & \textbf{2p} & \textbf{3p}\\
+    \hline
+    Present     & \multirow{3}{*}{o} & \multicolumn{2}{c|}{\multirow{3}{*}{e}} & \multirow{3}{*}{o} & \multirow{3}{*}{e} & \multirow{3}{*}{o}\\
+    Future      &                    & \multicolumn{2}{c|}{}   &                    &                    &                   \\
+    Imperfect   &                    & \multicolumn{2}{c|}{}   &                    &                    &                   \\
+    \hline
+    Aorist      & \multicolumn{6}{c|}{\multirow{2}{*}{a}}\\
+    Perfect     & \multicolumn{6}{c|}{}\\
+    \hline
+    Pluperfect  & \multicolumn{3}{c|}{ei} & \multicolumn{3}{c|}{e}\\ 
+    \hline
+\end{tabular}
+\caption{Theme vowel matrix}
+\label{tab:theme}
+\end{table}
+
+\begin{table*}
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+    & \multicolumn{3}{c|}{\textbf{Active}} & \multicolumn{2}{c|}{\textbf{Middle-Passive}}\\ 
+    \hline
+    & \multicolumn{2}{c|}{\textbf{Primary}} & \multirow{2}{*}{\textbf{Secondary}} & \multirow{2}{*}{\textbf{Primary}} & \multirow{2}{*}{\textbf{Secondary}}\\
+    \cline{2-3}
+    & \textbf{Thematic} & \textbf{Athematic} & & &\\
+    \hline
+    \textbf{1sg} & --    & -mi       & -n, --    & -mai  & -mēn\\
+    \hline
+    \textbf{2sg} & -si   & -s        & -s        & -sai  & -so\\
+    \hline
+    \textbf{3sg} & -ti    & -si(n)    & --        & -tai  & -to\\
+    \hline
+    \textbf{1pl} & -men  & -men      & -men      & -meṯa & -meṯa\\
+    \hline
+    \textbf{2pl} & -te   & -te       & -te       & -sṯe  & -sṯe\\
+    \hline
+    \textbf{3pl} & -nsi  & -nsi      & -n, -san  & -ntai & -nto\\
+    \hline  
+\end{tabular}
+\caption{Personal endings}
+\label{tab:personal-endings}
+\end{table*}
+
+\section{Mathematical analysis and formalization}
+
+Now that the conjugation of the regular verb (with our subset of restrictions)
+has been described in linguistic terms, it is now necessary to give a
+mathematical and computational formulation of all these rules. The following
+mathematical analysis is primarily inspired by the approach in
+\citet{lambek75}. Each set of morphemes can be viewed as an tuple, conditioned
+by cardinality (or indices).
+
+We will first need to define a tuple containg tenses.
+
+\[i = \{nonpast,past\}\]
+
+In tuple $j$, we list all three aspects. As above, these are accessed via
+index, or cardinality. Therefore, if $j = 1$, then $j = perfective$.
+
+\[j = \{perfective,imperfective,stative\}\]
+
+Traditionally, tense-aspect combinations are not referred to by a combination
+of the names of each respective tense and aspect. Therefore, we define a tuple
+$k$ containing the names of each tense-aspect pair. We will provide a mapping between
+$i,j$ and $k$ after defining the personal endings.
+
+\[k = \begin{array}{c}
+          \{future,\ present,\ perfect,\\
+          aorist,\ imperfect,\ pluperfect\}\\
+      \end{array}\]
+
+There are 6 possible personal endings. Technically there are 8, 
+but the dual number (which is not even present in many dialects,
+and never present in the 1st person) has been excluded in order
+to reduce the scope of this paper.
+      
+\[l = \{1s,2s,3s,1p,2p,3p\}\]
+
+Here, a mapping is given for mapping each \emph{tense system} to the respective
+tense-aspect pair.
+
+\[
+    k = \begin{cases}
+            1,1\text{ if }k = 1\\
+            1,2\text{ if }k = 2\\
+            1,3\text{ if }k = 3\\
+            2,1\text{ if }k = 4\\
+            2,2\text{ if }k = 5\\
+            2,3\text{ if }k = 6
+        \end{cases}
+\]
+
+The last variable we need to define is the \textbf{stem}. Let $S$ be a tuple,
+representing an array of graphemes in the stem. Thus, the graphemes in the stem
+$S$ can be accessed with an index. For example, if $S = lu\text{-}$, then $S =
+\{l, u\}$m and $S_1
+= l$ 
+
+This brings us to the main conjugation function $C$ which takes only a stem as
+input.
+
+\begin{equation}
+    C_{k,l}(S) = \textsc{Prefix}^{S}_{i,j}+S+\textsc{Suffix}_{k,l}
+\end{equation}
+
+The function for generating the prefix takes the stem $S$ and the 
+tense aspect pair $(i,j)$ as input. We let $\rho$ represent the
+reduplication prefix, and $\alpha$ as the $e$-augmentation prefix.
+
+\begin{equation}
+    \textsc{Prefix}^{S}_{i,j} = \alpha_i + \rho_{S,i}
+\end{equation}
+
+The conditioning of reduplication $\rho$ is as follows.
+
+\begin{equation}
+    \rho_{S,j} = \begin{cases}
+                     S_1 \text{e}\text{ if }j=3\\
+                     \emptyset\textit{ otherwise}
+                 \end{cases}
+\end{equation}
+
+The conditioning of the $e$-augment is as follows.
+
+\begin{equation}
+    \alpha_i = \begin{cases}
+                   \text{\koronis{e} if }i=2\\
+                   \emptyset\text{ otherwise}
+               \end{cases}
+\end{equation}
+
+Finally, the suffixes are obtained from selection of the theme vowel and
+personal ending from their respective matrices. These matrices are represented
+by tables \ref{tab:theme} and \ref{tab:personal-endings}, respectively.
+
+\begin{equation}
+    \textsc{Suffix}_{k,l} = \textsc{Theme}_{k,l} + \textsc{Ending}_{i,l}
+\end{equation}
+
+\section{Uses of Current Formalization}
+
+Here is an example derivation, showing the synthesis of the 3rd person
+singular, present active indicative form of the archetyple verb
+\textit{l\'{u}\={o}} ``to unbind, to loosen".
+
+\[C_{k,l}(S) = \textsc{Prefix}^{S}_{i,j}+S+\textsc{Suffix}_{k,l}\]
+
+Here we substitute the parameters (stem and morphological features)
+into their respective variable.
+
+\[\textsc{Prefix}^{\text{lu}}_{1,1}+\text{lu}+\textsc{Suffix}_{2,3}\]
+
+\[\alpha_1\rho_{\text{lu},1}\text{lu}\textsc{Suffix}_{2,3}\]
+
+\[\emptyset\emptyset\text{lu}\textsc{Suffix}_{2,3}\]
+
+When there are \emph{zeros}, they can be eliminated.
+
+\[\text{lu}\textsc{Suffix}_{2,3}\]
+
+\[\text{lu}\textsc{Theme}_{2,3}\textsc{Ending}_{1,3}\]
+\[\text{lue}\textsc{Ending}_{1,3}\]
+\[\text{lueti}\]
+
+We can finally say that $C_{2,3}(\text{lu}) = \textit{lueti}$. However, there
+is an issue--in table \ref{tab:regular-conjugation}, the 3rd person singular
+present active indicative form of \textit{l\'{u}\={o}} is \textit{l\'{u}ei},
+not *\textit{l\'{u}eti}. 
+
+This discrepency is due to a historical development of Greek phonology, in
+which intervocalic -$t$- became -$s$- regularly. This was followed by another
+change, in which intervocalic -$s$- was eliminated regularly. With these two
+rules in mind, we can illustrate the derivation of the actual form
+\textit{l\'{u}ei} from the form that was synthesized by the given functions
+(*\textit{l\'{u}eti}).
+
+\centerline{*\textit{l\'{u}eti} > *\textit{l\'{u}esi} > *\textit{l\'{u}ei}}
+
+Since these functions work on the level of \textit{graphemes} and not \textit{phonemes},
+derivations (or alternatively called \emph{rewrites}) are labelled as
+\textbf{morphographemic rules}. In philological terminology, the form generated
+before the application of morphographemic rules is calle the \textit{underlying form},
+while the form synthesized after the application of the morphographemic rules is
+called the \textit{surface form}. In table \ref{tab:underlying}, the present tense
+conjugation of \textit{l\'{u}\={o}} is given, comparing the underlying forms with
+the surface forms. Wherever there is a discrepency, the underlying form is marked with
+an asterisk.
+
+\begin{table}
+\centering
+\begin{tabular}{|l l|}
+    \hline
+    \textbf{Underlying} & \textbf{Surface}\\
+    \hline
+    *luo$\emptyset$ & lu\={o}\\
+    *luesi   & lueis\\
+    *lueti   & luei\\
+    luomen   & luomen\\
+    luete    & luete\\
+    *luonsi  & luousi\\
+    \hline
+\end{tabular}
+\caption{Underlying forms compared to surface forms in the present-tense
+    conjugation}
+\label{tab:underlying}
+\end{table}
+
+Transforming the underlying forms into the surface forms, in the past, has
+meant hand-writing a very large number of rules and testsing for their
+accuracy. 
+
+\section{Conclusion}
+
+Using a system such as the one described in this paper, it is possible to
+compose a corpus of \textit{underlying forms} aligned with \textit{surface forms}.
+Using statistical methods, the underlying forms generated by conjugation function,
+aligned with verb forms from preexisting corpora, provides the potential for
+eliminating the laborious step of writing morphographemic rules, with statistical
+tools (such as a neural network sequence to sequence model) inferring the rules fom
+the given data. It seems that this is a potentially powerful line of inquiry that
+should be explored further.
+
+\bibliography{sources}
+
+\end{document}

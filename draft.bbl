@@ -1,0 +1,62 @@
+\begin{thebibliography}{11}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{Crane(1991)}]{crane91}
+Gregory Crane. 1991.
+\newblock Generating and parsing classical {Greek}.
+\newblock \emph{Literary and Linguistic Computing}, 6:243--245.
+
+\bibitem[{Halle(1951)}]{halle1951}
+Morris Halle. 1951.
+\newblock The {Old Church Slavonic} conjugation (with an appendix on the {Old
+  Russian} conjugation).
+\newblock \emph{Word}, 7:155--167.
+
+\bibitem[{Jakobson(1948)}]{jakobson48}
+R.~Jakobson. 1948.
+\newblock Russian conjugation.
+\newblock \emph{Word}, 4:155--167.
+
+\bibitem[{Kortlant(1971)}]{kortlant1971}
+F.H.H. Kortlant. 1971.
+\newblock Russian conjugation: Computer synthesis of {Russian} verb forms.
+\newblock \emph{Tijdschrift voor Slavische Taal- en Letterkunde}, 1:51--80.
+
+\bibitem[{Lambek(1975)}]{lambek75}
+J.~Lambek. 1975.
+\newblock A mathematician looks at {French} conjugation.
+\newblock \emph{Theoretical Linguistics}, 2:203--214.
+
+\bibitem[{Rubenstein(1951)}]{rubenstein1951}
+Herbert Rubenstein. 1951.
+\newblock The {Czech} conjugation.
+\newblock \emph{Word}, 7:144--154.
+
+\bibitem[{Schenker(1951)}]{schenker1954}
+Alexander~M. Schenker. 1951.
+\newblock Polish conjugation.
+\newblock \emph{Word}, 10:469--481.
+
+\bibitem[{Smyth(1920)}]{smyth1920}
+H.W. Smyth. 1920.
+\newblock \emph{A Greek Grammar For Colleges}.
+\newblock Harvard University Press, Cambridge, MA.
+
+\bibitem[{van Emde~Boas et~al.(2019)van Emde~Boas, Rijksbaron, de~Bakker, and
+  Huitink}]{boas2019}
+Evert van Emde~Boas, Albert Rijksbaron, Mathieu de~Bakker, and Luuk Huitink.
+  2019.
+\newblock \emph{The Cambridge Grammar of Classical Greek}.
+\newblock Cambridge University Press, Cambridge, UK.
+
+\bibitem[{Wehr(1961)}]{wehr61}
+Hans Wehr. 1961.
+\newblock \emph{A Dictionary of Modern Written Arabic}.
+\newblock Otto Harrassowitz, Wiesbaden, Hesse.
+
+\bibitem[{Willi(2018)}]{willi2018}
+Andreas Willi. 2018.
+\newblock \emph{The Origins of the Greek Verb}.
+\newblock Cambridge University Press, Cambridge, UK.
+
+\end{thebibliography}
